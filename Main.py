@@ -18,4 +18,5 @@ chess_dataset['pgn'] = chess_dataset['pgn'].str.replace(r'\d+\.\.\.', '', regex=
 chess_dataset["average_rating"] = ((chess_dataset['white_rating'] + chess_dataset['black_rating']) // 2).astype(int)
 chess_dataset = chess_dataset.drop(columns = ["white_rating", "black_rating"])
 
+chess_dataset.to_csv("gmaes.csv")
 # Create our model that can predict the elo of chess game

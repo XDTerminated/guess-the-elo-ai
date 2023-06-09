@@ -1,72 +1,47 @@
+from stockfish import Stockfish
+import chess
 import chess.pgn
 import io
-import chess
-import chess.engine
+import chess.polyglot
 import pandas as pd
 
+stockfish = Stockfish(path = "/opt/homebrew/Cellar/stockfish/15.1/bin/stockfish", depth = 10, parameters = {"Threads": 2, "Hash": 2048, "Minimum Thinking Time": 1})
+opening_book_path = "opening_book/komodo.bin"
 
-def get_piece_count_fen(fen):
+board = chess.Board()
+board.push_san("e4")
+board.push_san("e5")
+board.push_san("Nf3")
+board.push_san("Nc6")
 
-    board = chess.Board()
 
-    board.set_fen(fen)
+with chess.polyglot.open_reader(opening_book_path) as reader:
+    for entry in reader.find_all(board):
+        print(entry.move, entry.weight, entry.learn)
 
-    piece_mapping = {
-    chess.KING: 0,
-    chess.QUEEN: 1,
-    chess.ROOK: 2,
-    chess.BISHOP: 3,
-    chess.KNIGHT: 4,
-    chess.PAWN: 5
-    }
 
-    piece_count = [[0] * 6, [0] * 6]
 
-    for piece in board.piece_map().values():
-        color = piece.color
-        piece_type = piece.piece_type
-        piece_index = piece_mapping[piece_type]
-        piece_count[color][piece_index] += 1
-
-    return piece_count[chess.WHITE], piece_count[chess.BLACK]
-
-def get_piece_count(pgn):
-    piece_count = []
-
+def get_game_report(pgn):
     board = chess.Board()
     game = chess.pgn.read_game(io.StringIO(pgn))
 
-    node = game
-    while node.variations:
-        white, black = get_piece_count_fen(board.fen())
-        piece_count.append([white, black])
-        board.push(node.variations[0].move)
-        node = node.variations[0]
-
-    return piece_count
-
-def get_stockfish_eval(pgn):
-    eval_list = []
-
-    board = chess.Board()
-    game = chess.pgn.read_game(io.StringIO(pgn))
+    openning = 0
+    brilliant = 0
+    great = 0
+    best = 0
+    excellent = 0
+    good = 0
+    missed_win = 0
+    inaccurate = 0
+    mistake = 0
+    blunder = 0
 
     node = game
     while node.variations:
-        eval = get_eval(board)
-        eval_list.append(eval)
-        board.push(node.variations[0].move)
+        fen = board.fen()
+        stockfish.set_fen_position(fen)
+        top_moves = stockfish.get_top_moves(7)
+        move_made = node.variations[0].move
+
+        board.push(move_made)
         node = node.variations[0]
-
-    return eval_list
-
-def get_eval(board):
-    stockfish = chess.engine.SimpleEngine.popen_uci("/opt/homebrew/Cellar/stockfish/15.1/bin/stockfish")
-    result = stockfish.analyse(board, chess.engine.Limit(time=0.005))
-    stockfish.quit()
-    return result["score"].relative.cp/100
-
-
-chess_data = pd.read_csv("data/games.csv")
-print(get_stockfish_eval(chess_data["pgn"].iloc[0]))
-

@@ -1,5 +1,6 @@
 import pandas as pd
-import math
+import chess.pgn
+import io
 
 chess_dataset = pd.read_csv("data/games.csv")
 # Create masks
@@ -20,6 +21,15 @@ chess_dataset["average_rating"] = ((chess_dataset['white_rating'] + chess_datase
 chess_dataset = chess_dataset.drop(columns = ["white_rating", "black_rating"])
 
 chess_dataset["average_rating"] = chess_dataset["average_rating"].round(-2)
+
+def count_moves(pgn):
+    game = chess.pgn.read_game(io.StringIO(pgn))
+    return len(list(game.mainline_moves()))
+
+
+chess_dataset['move_count'] = chess_dataset['pgn'].apply(count_moves)
+chess_dataset = chess_dataset[chess_dataset['move_count'] >= 10]
+chess_dataset = chess_dataset.drop('move_count', axis=1)
 
 chess_dataset.to_csv("games.csv")
 

@@ -48,3 +48,4 @@ for key, value in openings.items():
 
 openings = openings2
 del openings2
+

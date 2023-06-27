@@ -14,4 +14,4 @@
 <br>  
 <br>  
 
-The AI in its current state isn't that great. It can only predict the elo correctly around 20% of the time on average, however, it is usually only off by 100 to 200 elo points off. This is mainly because of how the data was preprocessed. Because the PGN was only split up into good and bad moves, there wasn't a lot to go off of. Also, I made it so that every move that lowers the stockfish eval by 2 was bad move, which is also a vague definition of a bad move.
+The AI in its current state isn't that great. It can only predict the elo correctly around 20% of the time on average, however, it is usually only off by 100 to 200 elo points off. This is mainly because of how the data was preprocessed. Because the PGN was only split up into good and bad moves, there wasn't a lot to go off of. Also, I made it so that every move that lowers the stockfish eval by 2 was bad move, which is also a vague definition of a bad move. Over time, I'll try to make this AI stronger by preprocessing the data better.

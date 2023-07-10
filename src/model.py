@@ -28,7 +28,7 @@ X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_
 
 model = tf.keras.models.Sequential()
 model.add(tf.keras.layers.Flatten(input_shape = X_train.shape[1:]) )
-model.add(tf.keras.layers.Dense(256, activation = "sigmoid"))
+model.add(tf.keras.layers.Dense(256, activation = "relu"))
 model.add(tf.keras.layers.Dense(2301))
 
 model.compile(optimizer = "adam", loss=tf.losses.SparseCategoricalCrossentropy(from_logits=True), metrics = ["accuracy"])
@@ -36,3 +36,4 @@ model.fit(X_train, Y_train, epochs = 500)
 
 print(model.evaluate(X_test, Y_test))
 
+model.save("GTEMODELV1.h5")

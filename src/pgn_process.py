@@ -6,7 +6,7 @@ import io
 import pandas as pd
 from extract_openings import openings
 
-df = pd.read_csv("games.csv")
+df = pd.read_csv("data/games.csv")
 
 
 stockfish = Stockfish(path = "/opt/homebrew/Cellar/stockfish/15.1/bin/stockfish", depth = 8, parameters = {"Threads": 1, "Hash": 2048, "Minimum Thinking Time": 1})
@@ -113,3 +113,5 @@ def process_pgn():
     df["length"] = length
 
     df.to_csv("games.csv")
+
+process_pgn()

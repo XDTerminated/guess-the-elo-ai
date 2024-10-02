@@ -1,8 +1,21 @@
 import math
-import pandas
-import os
 import chess
+import os
 import requests
+from dotenv import load_dotenv
+import pandas
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Get the API token from environment variables
+API_TOKEN = os.getenv("LICHESS_API_TOKEN")
+
+# Define the API endpoint and parameters
+URL = os.getenv("LICHESS_CLOUD_ENGINE")
+
+# Define the headers
+headers = {"Authorization": f"Bearer {API_TOKEN}", "Content-Type": "application/json"}
 
 
 def get_fen_representation(position: chess.Board) -> str:
@@ -55,7 +68,10 @@ def get_centi_pawn_evaluation(fen: str) -> float:
     Returns:
         float: The centi pawn evaluation of the chess position.
     """
-    pass
+    params = {"fen": fen}
+    response = requests.get(URL, headers=headers, params=params)
+
+    return response.json()["pvs"][0]["cp"]
 
 
 def classify_move() -> str:

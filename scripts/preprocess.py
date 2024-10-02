@@ -1,5 +1,21 @@
 import math
 import pandas
+import os
+import chess
+import requests
+
+
+def get_fen_representation(position: chess.Board) -> str:
+    """
+    Get the FEN representation of the chess position.
+
+    Args:
+        position (chess.Board): Chess position.
+
+    Returns:
+        str: FEN representation of the chess position.
+    """
+    return position.fen()
 
 
 def clean_up_data() -> None:

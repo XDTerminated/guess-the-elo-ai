@@ -3,7 +3,7 @@ import chess
 import os
 import requests
 from dotenv import load_dotenv
-import pandas
+import pandas as pd
 
 # Load environment variables from .env file
 load_dotenv()
@@ -38,7 +38,26 @@ def clean_up_data() -> None:
     Returns:
         None
     """
-    pass
+
+    # Load the data
+    df = pd.read_csv("data/raw/games.csv")
+
+    # Drop the unnecessary columns
+    df.drop(
+        columns=[
+            "id",
+            "rated",
+            "created_at",
+            "last_move_at",
+            "increment_code",
+            "white_id",
+            "black_id",
+        ],
+        inplace=True,
+    )
+
+    # Save the cleaned data
+    df.to_csv("data/processed/games.csv", index=False)
 
 
 def chance_of_winning(centi_pawn_advantage: float) -> float:
@@ -161,3 +180,6 @@ def calculate_average_material_imbalance(pgn: str) -> float:  # White - Black
         float: The average material imbalance of the chess game.
     """
     pass
+
+
+clean_up_data()

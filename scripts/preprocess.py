@@ -74,14 +74,28 @@ def get_centi_pawn_evaluation(fen: str) -> float:
     return response.json()["pvs"][0]["cp"]
 
 
-def classify_move() -> str:
+def classify_move(chance_of_winning_0: float, chance_of_winning: float) -> int:
     """
-    Classify the move as either a blunder, mistake, or inaccuracy.
+    Classify the move as either a blunder (0), mistake (1), inaccuracy (2) or ok (3).
+
+    Args:
+        chance_of_winning_0 (float): The probability of winning before the move.
+        chance_of_winning (float): The probability of winning after the move.
 
     Returns:
-        str: The classification of the move.
+        int: The classification of the move.
     """
-    pass
+    if chance_of_winning_0 - chance_of_winning >= 3:
+        return 0
+
+    elif chance_of_winning_0 - chance_of_winning >= 2:
+        return 1
+
+    elif chance_of_winning_0 - chance_of_winning >= 1:
+        return 2
+
+    else:
+        return 3
 
 
 def convert_pgn_to_numerical_representation(pgn: str) -> int:

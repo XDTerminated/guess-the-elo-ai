@@ -2,36 +2,33 @@ import math
 import chess
 import os
 import requests
-from dotenv import load_dotenv
 import pandas as pd
-
-# Load environment variables from .env file
-load_dotenv()
-
-# Get the API token from environment variables
-API_TOKEN = os.getenv("LICHESS_API_TOKEN")
+import re
 
 # Define the API endpoint and parameters
-URL = os.getenv("LICHESS_CLOUD_ENGINE")
+URL = "https://chess-api.com/v1"
 
-# Define the headers
-headers = {"Authorization": f"Bearer {API_TOKEN}", "Content-Type": "application/json"}
+# Define Headers
+headers = {"content-type": "application/json"}
 
 
-def get_fen_representation(position: chess.Board) -> str:
+def clean_pgn(pgn: str) -> str:
     """
-    Get the FEN representation of the chess position.
+    Remove move numbers (like '1.', '2.', etc.) from the PGN string.
 
     Args:
-        position (chess.Board): Chess position.
+        pgn (str): The PGN string containing move numbers.
 
     Returns:
-        str: FEN representation of the chess position.
+        str: The cleaned PGN string without move numbers.
     """
-    return position.fen()
+    # Use regular expression to remove move numbers (e.g., '1.' or '1...').
+    cleaned_pgn = re.sub(r"\d+\.\s*", "", pgn)
+
+    return cleaned_pgn
 
 
-def clean_up_data() -> None:
+def remove_columns() -> None:
     """
     Cleans up the data by removing any unnecessary columns.
 
@@ -87,10 +84,10 @@ def get_centi_pawn_evaluation(fen: str) -> float:
     Returns:
         float: The centi pawn evaluation of the chess position.
     """
-    params = {"fen": fen}
-    response = requests.get(URL, headers=headers, params=params)
+    payload = {"fen": fen}
+    response = requests.post(URL, headers=headers, json=payload)
 
-    return response.json()["pvs"][0]["cp"]
+    return response.json()
 
 
 def classify_move(chance_of_winning_0: float, chance_of_winning: float) -> int:
@@ -156,7 +153,7 @@ def calculate_opening_ply(pgn: str) -> int:
     pass
 
 
-def calculate_average_centipawn_loss(pgn: str) -> float:
+def calculate_average_centipawn_loss(pgn: str) -> tuple[float, float]:
     """
     Calculate the average centipawn loss of the chess game.
 
@@ -166,7 +163,31 @@ def calculate_average_centipawn_loss(pgn: str) -> float:
     Returns:
         float: The average centipawn loss of the chess game.
     """
-    pass
+
+    pgn = clean_pgn(pgn)
+
+    move_number = 0
+
+    board = chess.Board()
+    pgn = pgn.split()
+
+    centi_pawn_loss_white = 0
+    centi_pawn_loss_black = 0
+
+    for move in pgn:
+        current_evaluation = get_centi_pawn_evaluation(board.fen())
+        board.push_san(move)
+        next_evaluation = get_centi_pawn_evaluation(board.fen())
+
+        if move_number % 2 == 0:
+            centi_pawn_loss_white += current_evaluation - next_evaluation
+
+        else:
+            centi_pawn_loss_black += current_evaluation - next_evaluation
+
+        move_number += 1
+
+    return (centi_pawn_loss_white) / (move / 2), (centi_pawn_loss_black) / (move / 2)
 
 
 def calculate_average_material_imbalance(pgn: str) -> float:  # White - Black
@@ -182,4 +203,13 @@ def calculate_average_material_imbalance(pgn: str) -> float:  # White - Black
     pass
 
 
-clean_up_data()
+print(
+    get_centi_pawn_evaluation(
+        "rnb1kbnr/ppppq1pp/8/4P3/4p3/2N5/PPP2PPP/R1BQKBNR w KQkq - 2 5"
+    )
+)
+
+# # clean_up_data()
+# calculate_average_centipawn_loss(
+#     "1. e4 e5 2. d4 f5 3. dxe5 fxe4 4. Nc3 Qe7 5. Nxe4 Qxe5 6. Qe2 Bb4+ 7. c3 Ba5 8. Ng3 Qe7 9. Qxe7+ Nxe7 10. Nf3 d5 11. Bd3 Nbc6 12. Be3 Bd7 13. O-O O-O-O 14. Nd4 Ne5 15. Bc2 h6 16. f4 Nc4 17. b4 Nxe3 18. bxa5 Nxf1 19. Kxf1 a6 20. Rb1 c5 21. Nde2 Bb5 22. a4 Bc4 23. Nf5 Nc6 24. Nxg7 Nxa5 25. Bf5+ Kb8 26. Ne6 Rde8 27. Bg4 Ba2 28. Rb2 Bc4 29. Nxc5 Rxe2 30. Bxe2 Bxe2+ 31. Rxe2 Nc4 32. Re7 Ne3+ 33. Rxe3"
+# )

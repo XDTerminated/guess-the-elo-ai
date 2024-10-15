@@ -56,16 +56,8 @@ def clean_up_data() -> None:
         inplace=True,
     )
 
-    for i in range(len(df)):
-        game = df["moves"].iloc[i].split()
-        board = chess.Board()
-
-        for j in range(len(game)):
-            board.push_san(game[j])
-            print(board.fen())
-
     # Save the cleaned data
-    df.to_csv("data/processed/games.csv", index=False)
+    df.to_csv("data/interim/games.csv", index=False)
 
 
 def chance_of_winning(centi_pawn_advantage: float) -> float:

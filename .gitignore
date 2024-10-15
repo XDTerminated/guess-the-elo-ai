@@ -125,4 +125,4 @@ dmypy.json
 
 # Data directories
 data/raw/
-data/processed/
+data/iterim/

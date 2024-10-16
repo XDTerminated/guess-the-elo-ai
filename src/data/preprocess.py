@@ -87,7 +87,7 @@ def get_centi_pawn_evaluation(fen: str) -> float:
     payload = {"fen": fen}
     response = requests.post(URL, headers=headers, json=payload)
 
-    return response.json()
+    return float(response.json()["centipawns"])
 
 
 def classify_move(chance_of_winning_0: float, chance_of_winning: float) -> int:
@@ -155,39 +155,57 @@ def calculate_opening_ply(pgn: str) -> int:
 
 def calculate_average_centipawn_loss(pgn: str) -> tuple[float, float]:
     """
-    Calculate the average centipawn loss of the chess game.
+    Calculate the average centipawn loss for White and Black in a chess game.
 
     Args:
         pgn (str): PGN string of the chess game.
 
     Returns:
-        float: The average centipawn loss of the chess game.
+        tuple[float, float]: (Average CPL White, Average CPL Black)
     """
-
-    pgn = clean_pgn(pgn)
-
-    move_number = 0
-
+    cleaned_pgn = clean_pgn(pgn)
     board = chess.Board()
-    pgn = pgn.split()
+    moves = cleaned_pgn.split()
 
-    centi_pawn_loss_white = 0
-    centi_pawn_loss_black = 0
+    centi_pawn_loss_white = 0.0
+    centi_pawn_loss_black = 0.0
+    white_move_count = 0
+    black_move_count = 0
 
-    for move in pgn:
-        current_evaluation = get_centi_pawn_evaluation(board.fen())
-        board.push_san(move)
-        next_evaluation = get_centi_pawn_evaluation(board.fen())
+    for move in moves:
+        current_fen = board.fen()
+        best_move_evaluation = get_centi_pawn_evaluation(current_fen)
 
-        if move_number % 2 == 0:
-            centi_pawn_loss_white += current_evaluation - next_evaluation
+        try:
+            board.push_san(move)
+        except ValueError as e:
+            print(f"Invalid move '{move}' encountered: {e}")
+            break  # Exit the loop or handle the invalid move as needed
 
+        next_fen = board.fen()
+        actual_move_evaluation = get_centi_pawn_evaluation(next_fen)
+
+        # Determine which player made the move
+        if board.turn == chess.BLACK:
+            # Last move was by White
+            cpl = best_move_evaluation - actual_move_evaluation
+            centi_pawn_loss_white += cpl
+            white_move_count += 1
         else:
-            centi_pawn_loss_black += current_evaluation - next_evaluation
+            # Last move was by Black
+            cpl = abs(best_move_evaluation - actual_move_evaluation)
+            centi_pawn_loss_black += cpl
+            black_move_count += 1
 
-        move_number += 1
+    # Calculate average CPL, avoiding division by zero
+    average_cpl_white = (
+        centi_pawn_loss_white / white_move_count if white_move_count else 0.0
+    )
+    average_cpl_black = (
+        centi_pawn_loss_black / black_move_count if black_move_count else 0.0
+    )
 
-    return (centi_pawn_loss_white) / (move / 2), (centi_pawn_loss_black) / (move / 2)
+    return average_cpl_white, average_cpl_black
 
 
 def calculate_average_material_imbalance(pgn: str) -> float:  # White - Black
@@ -201,15 +219,3 @@ def calculate_average_material_imbalance(pgn: str) -> float:  # White - Black
         float: The average material imbalance of the chess game.
     """
     pass
-
-
-print(
-    get_centi_pawn_evaluation(
-        "rnb1kbnr/ppppq1pp/8/4P3/4p3/2N5/PPP2PPP/R1BQKBNR w KQkq - 2 5"
-    )
-)
-
-# # clean_up_data()
-# calculate_average_centipawn_loss(
-#     "1. e4 e5 2. d4 f5 3. dxe5 fxe4 4. Nc3 Qe7 5. Nxe4 Qxe5 6. Qe2 Bb4+ 7. c3 Ba5 8. Ng3 Qe7 9. Qxe7+ Nxe7 10. Nf3 d5 11. Bd3 Nbc6 12. Be3 Bd7 13. O-O O-O-O 14. Nd4 Ne5 15. Bc2 h6 16. f4 Nc4 17. b4 Nxe3 18. bxa5 Nxf1 19. Kxf1 a6 20. Rb1 c5 21. Nde2 Bb5 22. a4 Bc4 23. Nf5 Nc6 24. Nxg7 Nxa5 25. Bf5+ Kb8 26. Ne6 Rde8 27. Bg4 Ba2 28. Rb2 Bc4 29. Nxc5 Rxe2 30. Bxe2 Bxe2+ 31. Rxe2 Nc4 32. Re7 Ne3+ 33. Rxe3"
-# )

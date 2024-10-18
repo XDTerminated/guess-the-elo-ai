@@ -218,4 +218,36 @@ def calculate_average_material_imbalance(pgn: str) -> float:  # White - Black
     Returns:
         float: The average material imbalance of the chess game.
     """
-    pass
+
+    def material_count(board):
+        piece_values = {
+            chess.PAWN: 1,
+            chess.KNIGHT: 3,
+            chess.BISHOP: 3,
+            chess.ROOK: 5,
+            chess.QUEEN: 9,
+        }
+        white_material = sum(
+            piece_values[piece] * len(board.pieces(piece, chess.WHITE))
+            for piece in piece_values
+        )
+        black_material = sum(
+            piece_values[piece] * len(board.pieces(piece, chess.BLACK))
+            for piece in piece_values
+        )
+        return white_material - black_material
+
+    cleaned_pgn = clean_pgn(pgn)
+    board = chess.Board()
+    moves = cleaned_pgn.split()
+
+    total_imbalance = 0
+    move_count = 0
+
+    for move in moves:
+        board.push_san(move)
+        total_imbalance += material_count(board)
+        move_count += 1
+
+    average_imbalance = total_imbalance / move_count if move_count > 0 else 0
+    return average_imbalance

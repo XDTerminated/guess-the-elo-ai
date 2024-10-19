@@ -114,19 +114,6 @@ def classify_move(chance_of_winning_0: float, chance_of_winning: float) -> int:
         return 3
 
 
-def convert_pgn_to_numerical_representation(pgn: str) -> int:
-    """
-    Converts a PGN string to a numerical representation.
-
-    Args:
-        pgn (str): PGN string of the chess game.
-
-    Returns:
-        int: Numerical representation of the PGN string.
-    """
-    pass
-
-
 def classify_opening(pgn: str) -> str:
     """
     Classify the opening of the chess game.

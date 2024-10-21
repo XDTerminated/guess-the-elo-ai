@@ -1,31 +1,15 @@
 import math
 import chess
-import os
 import requests
 import pandas as pd
-import re
+import json
+from ..utils.clean_pgn import clean_pgn
 
 # Define the API endpoint and parameters
 URL = "https://chess-api.com/v1"
 
 # Define Headers
 headers = {"content-type": "application/json"}
-
-
-def clean_pgn(pgn: str) -> str:
-    """
-    Remove move numbers (like '1.', '2.', etc.) from the PGN string.
-
-    Args:
-        pgn (str): The PGN string containing move numbers.
-
-    Returns:
-        str: The cleaned PGN string without move numbers.
-    """
-    # Use regular expression to remove move numbers (e.g., '1.' or '1...').
-    cleaned_pgn = re.sub(r"\d+\.\s*", "", pgn)
-
-    return cleaned_pgn
 
 
 def remove_columns() -> None:
@@ -124,7 +108,14 @@ def classify_opening(pgn: str) -> str:
     Returns:
         str: The classification of the opening using ECO.
     """
-    pass
+    cleaned_pgn = clean_pgn(pgn)
+    board = chess.Board()
+    moves = cleaned_pgn.split()
+
+    for move in moves:
+        board.push_san(move)
+
+    return board.eco()
 
 
 def calculate_opening_ply(pgn: str) -> int:
@@ -137,7 +128,28 @@ def calculate_opening_ply(pgn: str) -> int:
     Returns:
         int: The opening ply of the chess game.
     """
-    pass
+    cleaned_pgn = clean_pgn(pgn)
+
+    with open("data/external/openings_condensed.json", "r") as file:
+        openings = json.load(file)
+
+    file.close()
+
+    board = chess.Board()
+    moves = cleaned_pgn.split()
+
+    opening_ply = 0
+
+    for i in range(len(moves)):
+        board.push_san(moves[i])
+        print(" ".join(moves[: i + 1]))
+        if " ".join(moves[: i + 1]) in openings:
+            opening_ply = i + 1
+
+        else:
+            break
+
+    return opening_ply
 
 
 def calculate_average_centipawn_loss(pgn: str) -> tuple[float, float]:
@@ -238,3 +250,8 @@ def calculate_average_material_imbalance(pgn: str) -> float:  # White - Black
 
     average_imbalance = total_imbalance / move_count if move_count > 0 else 0
     return average_imbalance
+
+
+moves = "1. e4 Nf6 2. e5 Nd5 3. d4"
+ply = calculate_opening_ply(moves)
+print(f"The ply for the given moves is: {ply}")

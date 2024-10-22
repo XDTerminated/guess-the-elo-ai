@@ -40,7 +40,6 @@ def remove_columns() -> None:
     # Save the cleaned data
     df.to_csv("data/interim/games.csv", index=False)
 
-
 def chance_of_winning(centi_pawn_advantage: float) -> float:
     """
     Calculates the chance of winning given the centi pawn advantage.
@@ -57,7 +56,6 @@ def chance_of_winning(centi_pawn_advantage: float) -> float:
         (2 / (math.exp(-0.003682081729595926 * centi_pawn_advantage) + 1)) - 1
     )
 
-
 def get_centi_pawn_evaluation(fen: str) -> float:
     """
     Get the centi pawn evaluation of a given FEN string.
@@ -72,7 +70,6 @@ def get_centi_pawn_evaluation(fen: str) -> float:
     response = requests.post(URL, headers=headers, json=payload)
 
     return float(response.json()["centipawns"])
-
 
 def classify_move(chance_of_winning_0: float, chance_of_winning: float) -> int:
     """
@@ -97,7 +94,6 @@ def classify_move(chance_of_winning_0: float, chance_of_winning: float) -> int:
     else:
         return 3
 
-
 def classify_opening(pgn: str) -> str:
     """
     Classify the opening of the chess game.
@@ -116,7 +112,6 @@ def classify_opening(pgn: str) -> str:
         board.push_san(move)
 
     return board.eco()
-
 
 def calculate_opening_ply(pgn: str) -> int:
     """
@@ -150,7 +145,6 @@ def calculate_opening_ply(pgn: str) -> int:
             break
 
     return opening_ply
-
 
 def calculate_average_centipawn_loss(pgn: str) -> tuple[float, float]:
     """
@@ -206,7 +200,6 @@ def calculate_average_centipawn_loss(pgn: str) -> tuple[float, float]:
 
     return average_cpl_white, average_cpl_black
 
-
 def calculate_average_material_imbalance(pgn: str) -> float:  # White - Black
     """
     Calculate the average material imbalance of the chess game.
@@ -250,8 +243,3 @@ def calculate_average_material_imbalance(pgn: str) -> float:  # White - Black
 
     average_imbalance = total_imbalance / move_count if move_count > 0 else 0
     return average_imbalance
-
-
-moves = "1. e4 Nf6 2. e5 Nd5 3. d4"
-ply = calculate_opening_ply(moves)
-print(f"The ply for the given moves is: {ply}")

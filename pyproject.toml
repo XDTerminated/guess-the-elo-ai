@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "guess-the-elo-ai"
+version = "0.1.0"
+description = ""
+authors = ["Sayam Gupta <gupta.sayam2006@gmail.com>"]
+readme = "README.md"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.12"
+zstandard = "^0.23.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

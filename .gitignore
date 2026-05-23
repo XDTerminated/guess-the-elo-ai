@@ -1,0 +1,45 @@
+# --- Data, checkpoints, logs (too large / per-machine) ---
+# Ignore data contents but keep the folder structure on git via .gitkeep
+# markers. To track a new data subdir, add it here following the pattern
+# and drop an empty .gitkeep file inside it.
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+checkpoints/
+logs/
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+*.egg
+build/
+dist/
+.eggs/
+
+# --- Virtual environments ---
+.venv/
+venv/
+env/
+
+# --- uv / pip ---
+.uv/
+pip-wheel-metadata/
+
+# --- Editors / IDEs ---
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# --- Notebooks ---
+.ipynb_checkpoints/
+
+# --- Misc ---
+*.log
+.env
+.env.local

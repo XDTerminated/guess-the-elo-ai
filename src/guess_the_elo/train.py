@@ -82,7 +82,12 @@ def pick_device_and_dtype():
             "    pip install --index-url https://download.pytorch.org/whl/cu121 torch"
         )
     device = torch.device("cuda")
-    amp_dtype = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
+    # Use bf16 only on Ampere+ (compute capability >= 8.0), which has native
+    # bf16 tensor cores. Older GPUs (T4/V100) emulate bf16 in software and
+    # are dramatically faster on fp16 — torch.cuda.is_bf16_supported() is
+    # unreliable here because it returns True for emulated bf16 too.
+    has_native_bf16 = torch.cuda.get_device_capability() >= (8, 0)
+    amp_dtype = torch.bfloat16 if has_native_bf16 else torch.float16
     scaler = torch.amp.GradScaler("cuda") if amp_dtype == torch.float16 else None
     return device, amp_dtype, scaler
 

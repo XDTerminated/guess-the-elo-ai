@@ -69,20 +69,21 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--num-workers", type=int, default=0)
     p.add_argument("--checkpoint", type=Path, default=DEFAULT_CHECKPOINT)
     p.add_argument("--seed", type=int, default=42)
-    p.add_argument("--no-cuda", action="store_true",
-                   help="Force CPU even if CUDA is available.")
     return p.parse_args()
 
 
-def pick_device_and_dtype(no_cuda: bool):
-    if not no_cuda and torch.cuda.is_available():
-        device = torch.device("cuda")
-        amp_dtype = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
-        scaler = torch.amp.GradScaler("cuda") if amp_dtype == torch.float16 else None
-    else:
-        device = torch.device("cpu")
-        amp_dtype = torch.float32
-        scaler = None
+def pick_device_and_dtype():
+    """Require CUDA. Fail loudly otherwise — we are paying for a GPU."""
+    if not torch.cuda.is_available():
+        raise RuntimeError(
+            "CUDA is not available, but this script requires a GPU.\n"
+            "Most likely cause: the CPU-only PyTorch wheel is installed.\n"
+            "On a GPU box, reinstall PyTorch with the matching CUDA index URL, e.g.:\n"
+            "    pip install --index-url https://download.pytorch.org/whl/cu121 torch"
+        )
+    device = torch.device("cuda")
+    amp_dtype = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
+    scaler = torch.amp.GradScaler("cuda") if amp_dtype == torch.float16 else None
     return device, amp_dtype, scaler
 
 
@@ -143,8 +144,8 @@ def save_checkpoint(path: Path, model, optimizer, step, epoch, val_mae, args, vo
 def train(args: argparse.Namespace) -> int:
     torch.manual_seed(args.seed)
 
-    device, amp_dtype, scaler = pick_device_and_dtype(args.no_cuda)
-    use_pin = device.type == "cuda"
+    device, amp_dtype, scaler = pick_device_and_dtype()
+    gpu_name = torch.cuda.get_device_name(0)
 
     # Vocab — needed to size the model.
     if not args.vocab.exists():
@@ -157,11 +158,11 @@ def train(args: argparse.Namespace) -> int:
     # Data loaders.
     train_loader = make_loader(
         args.train, batch_size=args.batch_size, shuffle=True,
-        num_workers=args.num_workers, max_len=args.max_len, pin_memory=use_pin,
+        num_workers=args.num_workers, max_len=args.max_len, pin_memory=True,
     )
     val_loader = make_loader(
         args.val, batch_size=args.batch_size, shuffle=False,
-        num_workers=args.num_workers, max_len=args.max_len, pin_memory=use_pin,
+        num_workers=args.num_workers, max_len=args.max_len, pin_memory=True,
     )
 
     # Model.
@@ -182,7 +183,8 @@ def train(args: argparse.Namespace) -> int:
     scheduler = make_lr_scheduler(optimizer, args.warmup_steps, total_steps)
 
     # --- Run banner ---
-    print(f"Device        : {device}  (AMP dtype: {amp_dtype})")
+    print(f"Device        : {device}  ({gpu_name})")
+    print(f"AMP dtype     : {amp_dtype}")
     print(f"Vocab size    : {vocab_size:,}")
     print(f"Train games   : {len(train_loader.dataset):,}")
     print(f"Val games     : {len(val_loader.dataset):,}")

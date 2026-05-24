@@ -21,6 +21,7 @@ from pathlib import Path
 import torch
 
 from guess_the_elo.model import EloTransformer
+from guess_the_elo.rating import lichess_to_chesscom
 from guess_the_elo.tokenizer import Tokenizer
 
 
@@ -58,6 +59,10 @@ def parse_args() -> argparse.Namespace:
                    help="Checkpoint to load (default: %(default)s).")
     p.add_argument("--vocab", type=Path, default=DEFAULT_VOCAB,
                    help="Vocab JSON to load (default: %(default)s).")
+    p.add_argument("--platform", choices=["lichess", "chesscom"], default="lichess",
+                   help="Which platform the game was played on. The model "
+                        "natively predicts Lichess Elo; passing `chesscom` "
+                        "converts the output via NoseKnowsAll's lookup table.")
     return p.parse_args()
 
 
@@ -131,8 +136,14 @@ def main() -> int:
         pred = model(moves)[0]
     white_elo, black_elo = pred.tolist()
 
-    print(f"White: {white_elo:>4.0f} Elo")
-    print(f"Black: {black_elo:>4.0f} Elo")
+    if args.platform == "chesscom":
+        white_out = lichess_to_chesscom(white_elo)
+        black_out = lichess_to_chesscom(black_elo)
+        print(f"White: {white_out:>4.0f} Chess.com Elo  (Lichess {white_elo:.0f})")
+        print(f"Black: {black_out:>4.0f} Chess.com Elo  (Lichess {black_elo:.0f})")
+    else:
+        print(f"White: {white_elo:>4.0f} Lichess Elo")
+        print(f"Black: {black_elo:>4.0f} Lichess Elo")
 
     # --- Diagnostics on stderr so they don't pollute clean stdout ---
     notes: list[str] = []

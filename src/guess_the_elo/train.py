@@ -135,13 +135,15 @@ def validate(model, loader, device, amp_dtype) -> dict:
 
 def save_checkpoint(path: Path, model, optimizer, step, epoch, val_mae, args, vocab_size):
     path.parent.mkdir(parents=True, exist_ok=True)
+    # Coerce Path -> str so checkpoints load cleanly across Linux/Windows.
+    args_dict = {k: str(v) if isinstance(v, Path) else v for k, v in vars(args).items()}
     torch.save({
         "model": model.state_dict(),
         "optimizer": optimizer.state_dict(),
         "step": step,
         "epoch": epoch,
         "val_mae": val_mae,
-        "args": vars(args),
+        "args": args_dict,
         "vocab_size": vocab_size,
     }, path)
 
